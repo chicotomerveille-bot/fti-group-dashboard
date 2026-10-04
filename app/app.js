@@ -127,6 +127,7 @@ function renderCharts(t,keys){
   Object.values(charts).forEach(c=>c&&c.destroy()); charts={};
   if(typeof Chart==='undefined') return;
   Chart.defaults.font.family='Inter,sans-serif';
+  Chart.defaults.font.size=11;
   const inM=keys.map(k=>t.rec.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0));
   const outM=keys.map(k=>t.dep.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0));
   let run=0;
@@ -134,13 +135,13 @@ function renderCharts(t,keys){
     data:{labels:keys.map(k=>k||'—'),datasets:[
       {label:'Entrées cumulées',data:cumul(inM),borderColor:'#16A34A',backgroundColor:'rgba(22,163,74,.12)',fill:true,tension:.4,pointRadius:3},
       {label:'Dépenses cumulées',data:cumul(outM),borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,.10)',fill:true,tension:.4,pointRadius:3}]},
-    options:{plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12,usePointStyle:true}}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
   void run;
   const cats={};
   t.dep.forEach(d=>{const desc=(d.description||'').toUpperCase(); const k=/RESTAURATION|HOTEL/.test(desc)?'Restauration & hôtel':/ECRAN|CHARGEUR|ONLY|RALONGE|BUREAUTIQUE/.test(desc)?'Matériel bureau':'Autres'; cats[k]=(cats[k]||0)+d.montant;});
   charts.cats=new Chart(document.getElementById('chCats'),{type:'bar',
-    data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#1E6FF5','#F59E0B','#7C3AED'],borderRadius:8}]},
-    options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
+    data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#1E6FF5','#F59E0B','#7C3AED'],borderRadius:8,maxBarThickness:48}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
 }
 
 function renderTables(t){
