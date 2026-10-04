@@ -3,117 +3,129 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FTI GROUP — Tableau de bord réel</title>
+<title>FTI GROUP — Tableau de bord</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <a class="skip" href="#main">Aller au contenu</a>
-<div class="topo-bg" aria-hidden="true"></div>
-<header class="topbar">
-  <div class="brand">
-    <div class="borne">FTI</div>
-    <div>
-      <h1>FTI GROUP <span>SARL · Géomètre-Topographe</span></h1>
-      <p class="sub">État réel de l'entreprise — patron & gestion · FCFA · Bénin</p>
+<div class="layout">
+  <aside class="sidebar" aria-label="Navigation principale">
+    <div class="logo"><span class="logo-mark">FTI</span><span class="logo-text">FTI GROUP<small>Géomètre-Topographe</small></span></div>
+    <nav class="side-nav" id="tabs" role="tablist" aria-label="Sections du tableau de bord">
+      <button data-tab="vue" class="active" role="tab" aria-selected="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg>Vue d'ensemble</button>
+      <button data-tab="projets" role="tab" aria-selected="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>Projets</button>
+      <button data-tab="produits" role="tab" aria-selected="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 2 3 6v8l7 4 7-4V6l-7-4ZM3 6l7 4 7-4M10 10v8"/></svg>Produits</button>
+      <button data-tab="entrees" role="tab" aria-selected="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 17V3m0 0 4 4m-4-4L6 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Entrées</button>
+      <button data-tab="depenses" role="tab" aria-selected="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 3v14m0 0 4-4m-4 4-4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>Dépenses</button>
+      <button data-tab="prets" role="tab" aria-selected="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2.5" y="5" width="15" height="10" rx="2"/><path d="M2.5 9h15M6 15v1.5M14 15v1.5" stroke-linecap="round"/></svg>Prêts bancaires</button>
+    </nav>
+    <div class="side-card">
+      <span class="side-card-tag">Contrat en cours</span>
+      <strong>ASC Lot 2 — 347,5 km</strong>
+      <span class="side-card-amount">37 000 000 FCFA</span>
+      <div class="mini-bar" aria-hidden="true"><i id="sideAscBar" style="width:2%"></i></div>
+      <span class="muted small" id="sideAscTxt">2,1 % du budget consommé</span>
+      <button class="btn primary block" data-goto="projets">Voir le projet</button>
     </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3.5 3.5" stroke-linecap="round"/></svg>
+        <input id="topSearch" type="search" placeholder="Rechercher client, produit, dépense…" aria-label="Recherche globale">
+      </div>
+      <div class="top-actions">
+        <div class="year-switch" id="yearSwitch" role="group" aria-label="Filtrer par année"></div>
+        <button id="btnAddDepense" class="btn ghost">Dépense</button>
+        <button id="btnAddRecette" class="btn primary">+ Entrée</button>
+      </div>
+    </header>
+
+    <main id="main">
+    <section id="tab-vue" class="tab active" role="tabpanel">
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-top"><span class="kpi-label">Trésorerie réelle</span><span class="pill neutral" id="kpiTrésoPill"></span></div><strong id="kpiTréso" class="mono">—</strong><div class="spark" id="sparkTrezo" aria-hidden="true"></div><span id="kpiTrésoSub" class="hint"></span></div>
+        <div class="kpi"><div class="kpi-top"><span class="kpi-label">Total entrées</span><span class="pill up" id="kpiInPill"></span></div><strong id="kpiIn" class="mono">—</strong><div class="spark" id="sparkIn" aria-hidden="true"></div><span class="hint" id="kpiInSub"></span></div>
+        <div class="kpi"><div class="kpi-top"><span class="kpi-label">Total dépenses</span><span class="pill down" id="kpiOutPill"></span></div><strong id="kpiOut" class="mono">—</strong><div class="spark" id="sparkOut" aria-hidden="true"></div><span class="hint" id="kpiOutSub"></span></div>
+        <div class="kpi"><div class="kpi-top"><span class="kpi-label">Reste budget ASC</span><span class="pill neutral" id="kpiAscPill"></span></div><strong id="kpiAscReste" class="mono">—</strong><div class="spark" id="sparkAsc" aria-hidden="true"></div><span class="hint">sur 13 104 402 FCFA de budget op.</span></div>
+      </div>
+
+      <div class="grid-main">
+        <div class="card wide">
+          <div class="row-between"><div><h2>Trésorerie cumulée</h2><p class="muted">Entrées moins dépenses, mois par mois (données datées)</p></div><strong class="mono big" id="profitTotal">—</strong></div>
+          <canvas id="chProfit" height="210"></canvas>
+        </div>
+        <div class="card">
+          <h2>Dépenses par catégorie</h2>
+          <canvas id="chCats" height="210"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <h2>Flux financiers</h2>
+          <div id="flowBars"></div>
+        </div>
+        <div class="card gauge-card">
+          <h2>Part PROJET FORET</h2>
+          <div class="gauge" id="gauge" role="img" aria-label="Part du projet forêt dans les entrées"></div>
+          <p class="muted center">des entrées viennent de la forêt sacrée de Ouidah</p>
+        </div>
+        <div class="card assistant">
+          <div class="orb" aria-hidden="true"></div>
+          <h2>Assistant FTI</h2>
+          <p class="muted" id="assistantTxt">Analyse de tes fichiers…</p>
+          <button class="btn primary block" data-goto-alerts="1">Voir les alertes</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row-between"><div><h2>Top produits</h2><p class="muted">Ce qui rapporte le plus, comme tes meilleures ventes</p></div></div>
+        <div class="table-wrap"><table id="tblTop"><thead><tr><th scope="col">#</th><th scope="col">Produit</th><th scope="col">Ventes</th><th scope="col">Total</th><th scope="col">Part</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="card alert" id="alertsCard">
+        <h2><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3 2.5 17h15L10 3Z" stroke-linejoin="round"/><path d="M10 8v4" stroke-linecap="round"/></svg>Points de vigilance</h2>
+        <ul id="alerts"></ul>
+      </div>
+    </section>
+
+    <section id="tab-projets" class="tab" role="tabpanel">
+      <div class="card">
+        <div class="row-between"><div><h2>Chaque projet : contrat, encaissé, dépensé, reste</h2></div><button class="btn ghost" id="btnAddProjet">+ Nouveau projet</button></div>
+        <div class="table-wrap"><table id="tblProjets"><thead><tr><th scope="col">Projet</th><th scope="col">Client</th><th scope="col">Contrat</th><th scope="col">Encaissé</th><th scope="col">Dépensé</th><th scope="col">Reste projet</th><th scope="col">Marge</th><th scope="col">Statut</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card"><h2>Détail budget ASC Lot 2 — 347,5 km</h2><div class="table-wrap"><table id="tblBudget"><thead><tr><th scope="col">Poste</th><th scope="col">Qté</th><th scope="col">PU</th><th scope="col">Total</th><th scope="col">Statut</th></tr></thead><tbody></tbody></table></div></div>
+    </section>
+
+    <section id="tab-produits" class="tab" role="tabpanel">
+      <div class="card"><h2>Chaque produit : combien il rapporte</h2><div class="table-wrap"><table id="tblProduits"><thead><tr><th scope="col">Produit</th><th scope="col">Type</th><th scope="col">Nb ventes</th><th scope="col">Total entrées</th><th scope="col">Part</th></tr></thead><tbody></tbody></table></div></div>
+    </section>
+
+    <section id="tab-entrees" class="tab" role="tabpanel">
+      <div class="card"><h2>Chaque entrée d'argent</h2><div class="table-wrap"><table id="tblIn"><thead><tr><th scope="col">Date</th><th scope="col">Client</th><th scope="col">Projet</th><th scope="col">Produit</th><th scope="col">Description</th><th scope="col">Compte</th><th scope="col">Montant</th></tr></thead><tbody></tbody></table></div></div>
+    </section>
+
+    <section id="tab-depenses" class="tab" role="tabpanel">
+      <div class="card"><h2>Chaque dépense — y compris la Cour / Siège</h2><div class="table-wrap"><table id="tblOut"><thead><tr><th scope="col">Date</th><th scope="col">Projet</th><th scope="col">Catégorie</th><th scope="col">Description</th><th scope="col">Compte</th><th scope="col">Montant</th></tr></thead><tbody></tbody></table></div></div>
+    </section>
+
+    <section id="tab-prets" class="tab" role="tabpanel">
+      <div class="grid2">
+        <div class="card"><div class="row-between"><h2>Prêts bancaires</h2><button class="btn ghost" id="btnAddPret">+ Nouveau prêt</button></div><div id="pretsList"></div><p class="muted">Reste dû total : <strong class="mono" id="kpiPrets">—</strong> <span id="kpiPretsSub"></span></p></div>
+        <div class="card"><h2>Échéancier — ce qu'il reste à payer</h2><div class="table-wrap"><table id="tblEch"><thead><tr><th scope="col">Prêt</th><th scope="col">Date</th><th scope="col">Mensualité</th><th scope="col">Payé ?</th></tr></thead><tbody></tbody></table></div></div>
+      </div>
+    </section>
+    </main>
+    <footer>FTI GROUP · données reprises de tes 2 Excel · ajouts stockés dans le navigateur · FCFA</footer>
   </div>
-  <div class="top-actions">
-    <div class="year-switch" id="yearSwitch"></div>
-    <button id="btnAddDepense" class="btn ghost" aria-label="Ajouter une dépense"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>Dépense</button>
-    <button id="btnAddRecette" class="btn primary" aria-label="Ajouter une entrée d'argent"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>Entrée d'argent</button>
-  </div>
-</header>
-
-<nav class="tabs" id="tabs" role="tablist" aria-label="Sections du tableau de bord">
-  <button data-tab="vue" class="active" role="tab" aria-selected="true">Vue d'ensemble</button>
-  <button data-tab="projets" role="tab" aria-selected="false">Projets</button>
-  <button data-tab="produits" role="tab" aria-selected="false">Produits</button>
-  <button data-tab="entrees" role="tab" aria-selected="false">Entrées</button>
-  <button data-tab="depenses" role="tab" aria-selected="false">Dépenses</button>
-  <button data-tab="prets" role="tab" aria-selected="false">Prêts bancaires</button>
-</nav>
-
-<main id="main">
-<!-- VUE -->
-<section id="tab-vue" class="tab active">
-  <div class="kpis">
-    <div class="kpi"><span class="kpi-label">Trésorerie réelle</span><strong id="kpiTréso" class="mono">—</strong><span id="kpiTrésoSub" class="hint"></span><div class="bullet" id="bulTrezo" aria-hidden="true"></div><div class="bullet-cap"><span>Dépenses</span><span>Entrées (cible)</span></div></div>
-    <div class="kpi"><span class="kpi-label">Total entrées</span><strong id="kpiIn" class="mono green">—</strong><span class="hint" id="kpiInSub"></span></div>
-    <div class="kpi"><span class="kpi-label">Total dépenses</span><strong id="kpiOut" class="mono red">—</strong><span class="hint" id="kpiOutSub"></span><div class="bullet" id="bulDep" aria-hidden="true"></div><div class="bullet-cap"><span>0</span><span>100 % des entrées</span></div></div>
-    <div class="kpi accent"><span class="kpi-label">Contrat ASC Lot 2</span><strong class="mono">37 000 000</strong><span class="hint">Budget op. 13 104 402 · <b id="kpiAscReste"></b> restants</span><div class="bullet" id="bulAsc" aria-hidden="true"></div><div class="bullet-cap"><span>Consommé</span><span>Budget (cible)</span></div></div>
-    <div class="kpi dark"><span class="kpi-label">Prêts — reste dû</span><strong id="kpiPrets" class="mono">—</strong><span class="hint" id="kpiPretsSub"></span><div class="bullet" id="bulPret" aria-hidden="true"></div><div class="bullet-cap"><span>Remboursé</span><span>Total dû</span></div></div>
-  </div>
-
-  <div class="grid2">
-    <div class="card">
-      <h2>Anneaux — où en est-on ?</h2>
-      <p class="muted">Lecture patron en 10 secondes : chaque anneau = % consommé / encaissé.</p>
-      <div class="rings" id="rings"></div>
-    </div>
-    <div class="card">
-      <h2>Recettes vs Dépenses par projet</h2>
-      <canvas id="chProjets" height="230"></canvas>
-      <div class="legend" id="projLegend"></div>
-    </div>
-  </div>
-
-  <div class="grid2">
-    <div class="card">
-      <h2>Activité par année</h2>
-      <canvas id="chAnnees" height="220"></canvas>
-    </div>
-    <div class="card">
-      <h2>Mix produits (entrées)</h2>
-      <canvas id="chProduits" height="220"></canvas>
-    </div>
-  </div>
-
-  <div class="card alert">
-    <h2><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3 2.5 17h15L10 3Z" stroke-linejoin="round"/><path d="M10 8v4" stroke-linecap="round"/><circle cx="10" cy="14.6" r=".4" fill="currentColor"/></svg>Points de vigilance — lus depuis tes fichiers</h2>
-    <ul id="alerts"></ul>
-  </div>
-</section>
-
-<!-- PROJETS -->
-<section id="tab-projets" class="tab">
-  <div class="card">
-    <div class="row-between"><h2>Chaque projet : contrat, encaissé, dépensé, reste</h2><button class="btn ghost" id="btnAddProjet">+ Nouveau projet</button></div>
-    <div class="table-wrap"><table id="tblProjets"><thead><tr><th scope="col">Projet</th><th scope="col">Client</th><th scope="col">Contrat</th><th scope="col">Encaissé</th><th scope="col">Dépensé</th><th scope="col">Reste projet</th><th scope="col">Marge</th><th scope="col">Statut</th></tr></thead><tbody></tbody></table></div>
-    <p class="muted">Nouveau projet = il apparaît ici avec 0 dépensé, puis chaque dépense/recette saisie avec son projet met à jour le reste automatiquement.</p>
-  </div>
-  <div class="card"><h2>Détail budget ASC Lot 2 — 347,5 km</h2><div class="table-wrap"><table id="tblBudget"><thead><tr><th scope="col">Poste</th><th scope="col">Qté</th><th scope="col">PU</th><th scope="col">Total</th><th scope="col">Statut</th></tr></thead><tbody></tbody></table></div></div>
-</section>
-
-<!-- PRODUITS -->
-<section id="tab-produits" class="tab">
-  <div class="card"><h2>Chaque produit : combien il rapporte</h2><div class="table-wrap"><table id="tblProduits"><thead><tr><th scope="col">Produit</th><th scope="col">Type</th><th scope="col">Nb ventes</th><th scope="col">Total entrées</th><th scope="col">Part</th></tr></thead><tbody></tbody></table></div></div>
-</section>
-
-<!-- ENTREES -->
-<section id="tab-entrees" class="tab">
-  <div class="card"><h2>Chaque entrée d'argent</h2><label class="muted" for="searchIn">Filtrer les entrées</label><input id="searchIn" class="search" placeholder="Rechercher client, description, produit…" aria-label="Rechercher dans les entrées"><div class="table-wrap"><table id="tblIn"><thead><tr><th scope="col">Date</th><th scope="col">Client</th><th scope="col">Projet</th><th scope="col">Produit</th><th scope="col">Description</th><th scope="col">Compte</th><th scope="col">Montant</th></tr></thead><tbody></tbody></table></div></div>
-</section>
-
-<!-- DEPENSES -->
-<section id="tab-depenses" class="tab">
-  <div class="card"><h2>Chaque dépense — y compris la Cour / Siège</h2><label class="muted" for="searchOut">Filtrer les dépenses</label><input id="searchOut" class="search" placeholder="Rechercher description, catégorie…" aria-label="Rechercher dans les dépenses"><div class="table-wrap"><table id="tblOut"><thead><tr><th scope="col">Date</th><th scope="col">Projet</th><th scope="col">Catégorie</th><th scope="col">Description</th><th scope="col">Compte</th><th scope="col">Montant</th></tr></thead><tbody></tbody></table></div></div>
-</section>
-
-<!-- PRETS -->
-<section id="tab-prets" class="tab">
-  <div class="grid2">
-    <div class="card"><div class="row-between"><h2>Prêts bancaires</h2><button class="btn ghost" id="btnAddPret">+ Nouveau prêt</button></div><div id="pretsList"></div></div>
-    <div class="card"><h2>Échéancier — ce qu'il reste à payer</h2><div class="table-wrap"><table id="tblEch"><thead><tr><th scope="col">Prêt</th><th scope="col">Date</th><th scope="col">Mensualité</th><th scope="col">Payé ?</th></tr></thead><tbody></tbody></table></div></div>
-  </div>
-</section>
-</main>
+</div>
 
 <dialog id="dlg"><form method="dialog" id="dlgForm"><h3 id="dlgTitle">Ajouter</h3><div id="dlgFields"></div><menu><button value="cancel" class="btn ghost">Annuler</button><button value="ok" class="btn primary" id="dlgOk">Enregistrer</button></menu></form></dialog>
-
-<footer>FTI GROUP · données reprises de tes 2 Excel · ajouts stockés dans le navigateur (localStorage) · devise FCFA</footer>
 <script src="app.js"></script>
 </body>
 </html>

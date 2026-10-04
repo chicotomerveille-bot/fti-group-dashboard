@@ -20,6 +20,7 @@ async function load(){
   buildYears(); renderAll();
 }
 function yearOf(d){ if(!d) return 'Sans date'; const m=/^(\d{4})/.exec(d); return m?m[1]:'Sans date'; }
+function monthOf(d){ if(!d) return null; const m=/^(\d{4}-\d{2})/.exec(d); return m?m[1]:null; }
 function guessProjet(r){
   const c=(r.categorie||'')+' '+(r.description||'');
   if(/FORET/i.test(c)) return 'PROJET FORET';
@@ -29,48 +30,78 @@ function guessProjet(r){
 }
 function guessProduit(r){ return (r.description||r.categorie||'Produit').trim(); }
 function filtered(list){ return YEAR==='toutes'?list:list.filter(x=>String(x.annee)===String(YEAR)); }
-
 function totals(){
   const rec=filtered(DB.recettes), dep=filtered(DB.depenses);
   const tin=rec.reduce((s,x)=>s+x.montant,0), tou=dep.reduce((s,x)=>s+x.montant,0);
   const restePrets = DB.echeances.filter(e=>!e.paye).reduce((s,e)=>s+e.montant,0);
   return {tin,tou,trezo:tin-tou,rec,dep,restePrets};
 }
+function groupBy(list,key){ const m={}; list.forEach(x=>{const k=x[key]||'—'; m[k]=(m[k]||0)+x.montant;}); return m; }
 
-function bullet(pct){
-  const p=Math.max(0,Math.min(1,pct));
-  return `<span class="q1"></span><span class="q2"></span><span class="q3"></span><span class="perf" style="width:calc(${(p*100).toFixed(1)}% - 2px)"></span><span class="target" style="left:100%"></span>`;
+/* Sparklines — construites depuis les vraies dates */
+function monthSeries(list){
+  const m={}; list.forEach(x=>{const k=monthOf(x.date); if(k) m[k]=(m[k]||0)+x.montant;});
+  return Object.keys(m).sort().map(k=>m[k]);
 }
-function ringSVG(pct,color,label,val,sub){
-  const c=2*Math.PI*44, off=c*(1-Math.min(1,pct));
-  return `<div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="#14201A18" stroke-width="12"/><circle cx="50" cy="50" r="44" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 50 50)"/><text x="50" y="56" text-anchor="middle" font-size="16" font-weight="800" fill="#14201A">${Math.round(pct*100)}%</text></svg><b>${label}</b><span>${val}</span><br><span>${sub}</span></div>`;
+function sparkSVG(values,color,fill){
+  if(!values.length) values=[0];
+  const W=120,H=34,max=Math.max(...values,1),min=Math.min(...values,0);
+  const pts=values.map((v,i)=>`${(i/(Math.max(1,values.length-1))* (W-4)+2).toFixed(1)},${(H-4-(v-min)/(max-min||1)*(H-8)).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polygon points="2,${H-2} ${pts} ${W-2},${H-2}" fill="${fill}"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function cumul(values){ let s=0; return values.map(v=>s+=v); }
+
+/* Jauge semi-circulaire */
+function gaugeSVG(pct){
+  const p=Math.max(0,Math.min(1,pct)), R=80, C=Math.PI*R, off=C*(1-p);
+  const col = p>=0.7 ? '#16A34A' : p>=0.4 ? '#1E6FF5' : '#F59E0B';
+  return `<svg viewBox="0 0 200 115"><path d="M20 105 A80 80 0 0 1 180 105" fill="none" stroke="#E2E8F0" stroke-width="16" stroke-linecap="round"/><path d="M20 105 A80 80 0 0 1 180 105" fill="none" stroke="${col}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/><text x="100" y="88" text-anchor="middle" font-size="26" font-weight="800" fill="#0F1F38">${(p*100).toFixed(1).replace('.',',')}%</text><text x="100" y="105" text-anchor="middle" font-size="10" fill="#64748B">des entrées</text></svg>`;
 }
 
 let charts={};
 function renderAll(){
   const t=totals();
-  document.getElementById('kpiTréso').textContent=fmt(t.trezo);
-  document.getElementById('kpiTrésoSub').textContent=`${t.rec.length} entrées · ${t.dep.length} dépenses (${YEAR})`;
-  document.getElementById('kpiIn').textContent=fmt(t.tin);
-  document.getElementById('kpiInSub').textContent=`dont FORET ${fmt(t.rec.filter(r=>r.projet==='PROJET FORET').reduce((s,x)=>s+x.montant,0))}`;
-  document.getElementById('kpiOut').textContent=fmt(t.tou);
-  document.getElementById('kpiOutSub').textContent=`dont ASC ${fmt(t.dep.filter(d=>d.projet.includes('ASC')).reduce((s,x)=>s+x.montant,0))}`;
   const depAsc = DB.depenses.filter(d=>d.projet.includes('ASC')).reduce((s,x)=>s+x.montant,0);
   const budget = 13104401.625;
-  document.getElementById('kpiAscReste').textContent=fmt(budget-depAsc);
-  document.getElementById('kpiPrets').textContent=fmt(t.restePrets);
-  document.getElementById('kpiPretsSub').textContent= DB.prets.length? `${DB.prets.length} prêt(s) · ${DB.echeances.filter(e=>!e.paye).length} échéances restantes` : 'Aucun prêt saisi — ajoute le 1er';
+  const inForet = t.rec.filter(r=>r.projet==='PROJET FORET').reduce((s,x)=>s+x.montant,0);
 
-  document.getElementById('rings').innerHTML =
-    ringSVG(depAsc/budget,'#DC2626','Budget ASC consommé',fmt(depAsc),`reste ${fmt(budget-depAsc)}`) +
-    ringSVG(t.tou/Math.max(1,t.tin),'#059669','Dépenses / Entrées',fmt(t.tou),`${fmt(t.tin)} encaissés`) +
-    ringSVG(t.rec.filter(r=>r.projet==='PROJET FORET').reduce((s,x)=>s+x.montant,0)/Math.max(1,t.tin),'#3B82F6','Part FORET',fmt(t.rec.filter(r=>r.projet==='PROJET FORET').reduce((s,x)=>s+x.montant,0)),'sur total entrées') +
-    ringSVG(DB.prets.length? (DB.echeances.filter(e=>e.paye).reduce((s,e)=>s+e.montant,0)/Math.max(1,DB.echeances.reduce((s,e)=>s+e.montant,0))):0,'#1E40AF','Prêts remboursés',fmt(DB.echeances.filter(e=>e.paye).reduce((s,e)=>s+e.montant,0)), DB.prets.length?'sur total dû':'aucun prêt');
-  const totEch=DB.echeances.reduce((s,e)=>s+e.montant,0), payeEch=DB.echeances.filter(e=>e.paye).reduce((s,e)=>s+e.montant,0);
-  document.getElementById('bulTrezo').innerHTML=bullet(t.tou/Math.max(1,t.tin));
-  document.getElementById('bulDep').innerHTML=bullet(t.tou/Math.max(1,t.tin));
-  document.getElementById('bulAsc').innerHTML=bullet(depAsc/budget);
-  document.getElementById('bulPret').innerHTML=bullet(totEch?payeEch/totEch:0);
+  document.getElementById('kpiTréso').textContent=fmt(t.trezo);
+  document.getElementById('kpiTrésoPill').textContent=`${t.rec.length} entrées · ${t.dep.length} dépenses`;
+  document.getElementById('kpiTrésoSub').textContent=`Période : ${YEAR}`;
+  document.getElementById('kpiIn').textContent=fmt(t.tin);
+  document.getElementById('kpiInPill').textContent=`dont FORET ${fmt(inForet)}`;
+  document.getElementById('kpiInSub').textContent=`Mix : ${[...new Set(t.rec.map(r=>r.produit))].length} produits`;
+  document.getElementById('kpiOut').textContent=fmt(t.tou);
+  document.getElementById('kpiOutPill').textContent=`${t.tin?(t.tou/t.tin*100).toFixed(1).replace('.',','):0} % des entrées`;
+  document.getElementById('kpiOutSub').textContent=`dont ASC ${fmt(depAsc)}`;
+  document.getElementById('kpiAscReste').textContent=fmt(budget-depAsc);
+  document.getElementById('kpiAscPill').textContent=`${(depAsc/budget*100).toFixed(1).replace('.',',')} % consommé`;
+  document.getElementById('sideAscBar').style.width=(depAsc/budget*100).toFixed(1)+'%';
+  document.getElementById('sideAscTxt').textContent=`${(depAsc/budget*100).toFixed(1).replace('.',',')} % du budget consommé · reste ${fmt(budget-depAsc)}`;
+
+  /* Sparklines */
+  const msIn=monthSeries(t.rec), msOut=monthSeries(t.dep);
+  const keys=[...new Set([...t.rec.map(r=>monthOf(r.date)),...t.dep.map(r=>monthOf(r.date))])].filter(Boolean).sort();
+  const netByMonth=keys.map(k=> (t.rec.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0) - t.dep.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0)));
+  document.getElementById('sparkTrezo').innerHTML=sparkSVG(cumul(netByMonth),'#1E6FF5','#E8F0FE');
+  document.getElementById('sparkIn').innerHTML=sparkSVG(cumul(msIn),'#16A34A','#DCFCE7');
+  document.getElementById('sparkOut').innerHTML=sparkSVG(cumul(msOut),'#EF4444','#FEE2E2');
+  document.getElementById('sparkAsc').innerHTML=sparkSVG(cumul(monthSeries(DB.depenses.filter(d=>d.projet.includes('ASC')))),'#F59E0B','#FEF3C7');
+  document.getElementById('profitTotal').textContent=fmt(t.trezo);
+
+  /* Barres de flux */
+  const maxF=Math.max(t.tin,t.tou,budget-depAsc,1);
+  const bar=(label,val,color)=>`<div class="flow-row"><span>${label}</span><span class="bar"><i style="width:${(val/maxF*100).toFixed(1)}%;background:${color}"></i></span><b>${fmt(val)}</b></div>`;
+  document.getElementById('flowBars').innerHTML=
+    bar('Entrées',t.tin,'#16A34A')+bar('Dépenses',t.tou,'#EF4444')+bar('Reste ASC',budget-depAsc,'#1E6FF5');
+
+  /* Jauge */
+  document.getElementById('gauge').innerHTML=gaugeSVG(t.tin?inForet/t.tin:0);
+
+  /* Assistant */
+  document.getElementById('assistantTxt').textContent = depAsc/budget<0.05
+    ? `Démarrage ASC : seulement ${(depAsc/budget*100).toFixed(1).replace('.',',')} % du budget consommé. Point à sécuriser : devis pick-up à 35 000 FCFA/j toujours provisoire.`
+    : `Budget ASC consommé à ${(depAsc/budget*100).toFixed(1).replace('.',',')} %. Trésorerie : ${fmt(t.trezo)}.`;
 
   document.getElementById('alerts').innerHTML = [
     `<li><b>Devise CHF dans l'Excel</b> → appli forcée en FCFA. TVA à 0, à paramétrer au Bénin.</li>`,
@@ -80,48 +111,58 @@ function renderAll(){
     `<li><b>Comptes non renseignés</b> — tout passe en Espèces (caisse). Renseigne banque / Mobile Money pour la tréso réelle.</li>`
   ].join('');
 
-  renderTables(); renderCharts(); renderPrets();
+  /* Top produits */
+  const gp=groupBy(t.rec,'produit');
+  document.querySelector('#tblTop tbody').innerHTML = Object.entries(gp).sort((a,b)=>b[1]-a[1]).map(([k,v],i)=>{
+    const n=t.rec.filter(r=>r.produit===k).length, pct=(v/Math.max(1,t.tin)*100);
+    return `<tr><td><span class="rank">${i+1}</span></td><td><b>${k}</b></td><td>${n}</td><td class="mono"><b>${fmt(v)}</b></td><td><div style="display:flex;align-items:center;gap:8px"><span class="share-bar" style="flex:1"><i style="width:${pct.toFixed(1)}%"></i></span><span class="mono">${pct.toFixed(1).replace('.',',')}%</span></div></td></tr>`;
+  }).join('');
+
+  renderTables(t); renderCharts(t,keys); renderPrets();
 }
 
-function groupBy(list,key){ const m={}; list.forEach(x=>{const k=x[key]||'—'; m[k]=(m[k]||0)+x.montant;}); return m; }
-
-function renderCharts(){
+function renderCharts(t,keys){
   Object.values(charts).forEach(c=>c&&c.destroy()); charts={};
   if(typeof Chart==='undefined') return;
-  const projs=[...new Set([...DB.recettes.map(r=>r.projet),...DB.depenses.map(d=>d.projet)])];
-  const rin=projs.map(p=>filtered(DB.recettes).filter(r=>r.projet===p).reduce((s,x)=>s+x.montant,0));
-  const rou=projs.map(p=>filtered(DB.depenses).filter(d=>d.projet===p).reduce((s,x)=>s+x.montant,0));
-  charts.p= new Chart(document.getElementById('chProjets'),{type:'bar',data:{labels:projs,datasets:[{label:'Entrées',data:rin,backgroundColor:'#059669'},{label:'Dépenses',data:rou,backgroundColor:'#DC2626'}]},options:{plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
-  document.getElementById('projLegend').textContent = projs.map((p,i)=>`${p}: +${fmtN(rin[i])} / -${fmtN(rou[i])}`).join(' · ');
-  const years=[...new Set([...DB.recettes.map(r=>r.annee),...DB.depenses.map(d=>d.annee)])].sort();
-  charts.a=new Chart(document.getElementById('chAnnees'),{type:'bar',data:{labels:years,datasets:[{label:'Entrées',data:years.map(y=>DB.recettes.filter(r=>String(r.annee)===String(y)).reduce((s,x)=>s+x.montant,0)),backgroundColor:'#3B82F6'},{label:'Dépenses',data:years.map(y=>DB.depenses.filter(r=>String(r.annee)===String(y)).reduce((s,x)=>s+x.montant,0)),backgroundColor:'#1E40AF'}]},options:{plugins:{legend:{position:'bottom'}}}});
-  const g=groupBy(filtered(DB.recettes),'produit'); 
-  charts.pr=new Chart(document.getElementById('chProduits'),{type:'doughnut',data:{labels:Object.keys(g),datasets:[{data:Object.values(g),backgroundColor:['#059669','#3B82F6','#1E40AF','#DC2626','#7A5CFF','#00B8A9']}]},options:{plugins:{legend:{position:'bottom'}}}});
+  Chart.defaults.font.family='Inter,sans-serif';
+  const inM=keys.map(k=>t.rec.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0));
+  const outM=keys.map(k=>t.dep.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0));
+  let run=0;
+  charts.profit=new Chart(document.getElementById('chProfit'),{type:'line',
+    data:{labels:keys.map(k=>k||'—'),datasets:[
+      {label:'Entrées cumulées',data:cumul(inM),borderColor:'#16A34A',backgroundColor:'rgba(22,163,74,.12)',fill:true,tension:.4,pointRadius:3},
+      {label:'Dépenses cumulées',data:cumul(outM),borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,.10)',fill:true,tension:.4,pointRadius:3}]},
+    options:{plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
+  void run;
+  const cats={};
+  t.dep.forEach(d=>{const desc=(d.description||'').toUpperCase(); const k=/RESTAURATION|HOTEL/.test(desc)?'Restauration & hôtel':/ECRAN|CHARGEUR|ONLY|RALONGE|BUREAUTIQUE/.test(desc)?'Matériel bureau':'Autres'; cats[k]=(cats[k]||0)+d.montant;});
+  charts.cats=new Chart(document.getElementById('chCats'),{type:'bar',
+    data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#1E6FF5','#F59E0B','#7C3AED'],borderRadius:8}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
 }
 
-function renderTables(){
-  // projets
+function renderTables(t){
+  t=t||totals();
   const allProjs=[...DB.projetsBase, ...DB.projetsPerso];
   const tb=document.querySelector('#tblProjets tbody'); tb.innerHTML='';
   allProjs.forEach(p=>{
     const ein=DB.recettes.filter(r=>r.projet===p.nom||(p.nom.includes('ASC')&&r.projet.includes('ASC'))).reduce((s,x)=>s+x.montant,0);
     const eout=DB.depenses.filter(d=>d.projet===p.nom||(p.nom.includes('ASC')&&d.projet.includes('ASC'))).reduce((s,x)=>s+x.montant,0);
-    // mapping simplifié : FORET/LEVE/LOCATION exacts
     const ein2 = p.nom==='PROJET FORET'? DB.recettes.filter(r=>r.projet==='PROJET FORET').reduce((s,x)=>s+x.montant,0)
       : p.nom==='LEVE'? DB.recettes.filter(r=>r.projet==='LEVE').reduce((s,x)=>s+x.montant,0)
       : p.nom==='LOCATION APPAREILS'? DB.recettes.filter(r=>r.projet==='LOCATION APPAREILS').reduce((s,x)=>s+x.montant,0) : ein;
     const ref = p.contrat ?? ein2;
     const reste = ref - eout;
     const marge = p.contrat? ((p.contrat-(p.budget||eout))/p.contrat*100): null;
-    tb.innerHTML+=`<tr><td><b>${p.nom}</b><br><span class="muted">${p.client||''}</span></td><td>${p.client||'—'}</td><td class="mono">${p.contrat?fmt(p.contrat):'—'}</td><td class="mono green">${fmt(ein2||ein)}</td><td class="mono red">${fmt(eout)}</td><td class="mono"><b>${fmt(reste)}</b></td><td>${marge===null?'—':marge.toFixed(1)+'%'}</td><td>${p.statut||''}</td></tr>`;
+    tb.innerHTML+=`<tr><td><b>${p.nom}</b><br><span class="muted">${p.client||''}</span></td><td>${p.client||'—'}</td><td class="mono">${p.contrat?fmt(p.contrat):'—'}</td><td class="mono" style="color:var(--accent)">${fmt(ein2||ein)}</td><td class="mono" style="color:var(--danger)">${fmt(eout)}</td><td class="mono"><b>${fmt(reste)}</b></td><td>${marge===null?'—':marge.toFixed(1).replace('.',',')+'%'}</td><td>${p.statut||''}</td></tr>`;
   });
   document.querySelector('#tblBudget tbody').innerHTML = (DB.detailCouts||[]).map(d=>`<tr><td>${d.poste}</td><td>${d.qte} ${d.unite||''}</td><td>${fmtN(d.pu)}</td><td class="mono">${fmt(d.total)}</td><td>${d.statut||''}</td></tr>`).join('');
   const gp=groupBy(filtered(DB.recettes),'produit');
-  document.querySelector('#tblProduits tbody').innerHTML = Object.entries(gp).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const n=filtered(DB.recettes).filter(r=>r.produit===k).length;return `<tr><td>${k}</td><td>Topographie</td><td>${n}</td><td class="mono green">${fmt(v)}</td><td>${(v/Math.max(1,totals().tin)*100).toFixed(1)}%</td></tr>`}).join('');
-  const q=(document.getElementById('searchIn').value||'').toLowerCase();
-  document.querySelector('#tblIn tbody').innerHTML = filtered(DB.recettes).filter(r=>(r.client+' '+r.description+' '+r.produit+' '+r.projet).toLowerCase().includes(q)).map(r=>`<tr><td>${r.date||'—'}</td><td>${r.client||'—'}</td><td>${r.projet}</td><td>${r.produit}</td><td>${r.description||''}</td><td>${r.compte||'—'}</td><td class="mono green">${fmt(r.montant)}</td></tr>`).join('');
-  const q2=(document.getElementById('searchOut').value||'').toLowerCase();
-  document.querySelector('#tblOut tbody').innerHTML = filtered(DB.depenses).filter(d=>((d.description||'')+' '+(d.categorie||'')+' '+(d.projet||'')).toLowerCase().includes(q2)).map(d=>`<tr><td>${d.date||'—'}</td><td>${d.projet}</td><td>${d.categorie||''}</td><td>${d.description||''}</td><td>${d.compte||'—'}</td><td class="mono red">${fmt(d.montant)}</td></tr>`).join('');
+  document.querySelector('#tblProduits tbody').innerHTML = Object.entries(gp).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const n=filtered(DB.recettes).filter(r=>r.produit===k).length;return `<tr><td>${k}</td><td>Topographie</td><td>${n}</td><td class="mono" style="color:var(--accent)">${fmt(v)}</td><td>${(v/Math.max(1,totals().tin)*100).toFixed(1).replace('.',',')}%</td></tr>`}).join('');
+  const q=(document.getElementById('topSearch').value||'').toLowerCase();
+  const match=r=>((r.client||'')+' '+(r.description||'')+' '+(r.produit||'')+' '+(r.projet||'')).toLowerCase().includes(q);
+  document.querySelector('#tblIn tbody').innerHTML = filtered(DB.recettes).filter(match).map(r=>`<tr><td>${r.date||'—'}</td><td>${r.client||'—'}</td><td>${r.projet}</td><td>${r.produit}</td><td>${r.description||''}</td><td>${r.compte||'—'}</td><td class="mono" style="color:var(--accent)">${fmt(r.montant)}</td></tr>`).join('');
+  document.querySelector('#tblOut tbody').innerHTML = filtered(DB.depenses).filter(d=>((d.description||'')+' '+(d.categorie||'')+' '+(d.projet||'')).toLowerCase().includes(q)).map(d=>`<tr><td>${d.date||'—'}</td><td>${d.projet}</td><td>${d.categorie||''}</td><td>${d.description||''}</td><td>${d.compte||'—'}</td><td class="mono" style="color:var(--danger)">${fmt(d.montant)}</td></tr>`).join('');
 }
 
 function renderPrets(){
@@ -129,8 +170,11 @@ function renderPrets(){
   if(!DB.prets.length){ box.innerHTML=`<p class="muted">Aucun prêt saisi. Ajoute ton prêt bancaire : montant, mensualité, durée → l'appli génère l'échéancier et le reste dû.</p>`; }
   else box.innerHTML=DB.prets.map(p=>{const ech=DB.echeances.filter(e=>e.pret===p.nom); const paye=ech.filter(e=>e.paye).reduce((s,e)=>s+e.montant,0); const tot=ech.reduce((s,e)=>s+e.montant,0); const pct=tot?paye/tot:0;
     return `<div class="pret"><b>${p.nom}</b> — ${p.banque}<br><span class="muted">${fmt(p.montant)} · ${fmt(p.mensualite)}/mois · ${ech.length} mois</span><div class="bar"><i style="width:${pct*100}%"></i></div><span class="mono">Payé ${fmt(paye)} · Reste ${fmt(tot-paye)}</span></div>`}).join('');
-  document.querySelector('#tblEch tbody').innerHTML = DB.echeances.map((e,i)=>`<tr><td>${e.pret}</td><td>${e.date}</td><td class="mono">${fmt(e.montant)}</td><td><input type="checkbox" data-i="${i}" ${e.paye?'checked':''} class="paye"> ${e.paye?'Payé':'À payer'}</td></tr>`).join('') || `<tr><td colspan="4" class="muted">—</td></tr>`;
+  document.querySelector('#tblEch tbody').innerHTML = DB.echeances.map((e,i)=>`<tr><td>${e.pret}</td><td>${e.date}</td><td class="mono">${fmt(e.montant)}</td><td><input type="checkbox" data-i="${i}" ${e.paye?'checked':''} class="paye" aria-label="Échéance ${e.date} payée"> ${e.paye?'Payé':'À payer'}</td></tr>`).join('') || `<tr><td colspan="4" class="muted">—</td></tr>`;
   document.querySelectorAll('.paye').forEach(c=>c.onchange=e=>{DB.echeances[+e.target.dataset.i].paye=e.target.checked; save('echeances',DB.echeances); renderAll();});
+  const t=totals();
+  document.getElementById('kpiPrets').textContent=fmt(t.restePrets);
+  document.getElementById('kpiPretsSub').textContent= DB.prets.length? ` · ${DB.prets.length} prêt(s), ${DB.echeances.filter(e=>!e.paye).length} échéances restantes` : ' — ajoute le 1er prêt';
 }
 function save(k,v){ localStorage.setItem('fti_'+k, JSON.stringify(v)); }
 
@@ -140,11 +184,14 @@ function buildYears(){
   ['toutes',...ys].forEach(y=>{const b=document.createElement('button'); b.textContent=y; if(y===YEAR)b.classList.add('on'); b.onclick=()=>{YEAR=y; buildYears(); renderAll();}; sw.appendChild(b);});
 }
 
-// tabs
-document.getElementById('tabs').onclick=e=>{ const btn=e.target.closest('button'); if(btn&&btn.dataset.tab){ document.querySelectorAll('.tabs button').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');}); btn.classList.add('active'); btn.setAttribute('aria-selected','true'); document.querySelectorAll('main .tab').forEach(s=>s.classList.remove('active')); document.getElementById('tab-'+btn.dataset.tab).classList.add('active'); }};
-document.getElementById('searchIn').oninput=renderTables; document.getElementById('searchOut').oninput=renderTables;
+/* Navigation sidebar + boutons */
+function goto(tab){ document.querySelectorAll('.side-nav button').forEach(b=>{const on=b.dataset.tab===tab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on);}); document.querySelectorAll('main .tab').forEach(s=>s.classList.remove('active')); document.getElementById('tab-'+tab).classList.add('active'); }
+document.getElementById('tabs').onclick=e=>{ const btn=e.target.closest('button'); if(btn&&btn.dataset.tab) goto(btn.dataset.tab); };
+document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(b.dataset.goto));
+document.querySelectorAll('[data-goto-alerts]').forEach(b=>b.onclick=()=>{goto('vue'); setTimeout(()=>document.getElementById('alertsCard').scrollIntoView({behavior:'smooth'}),50);});
+document.getElementById('topSearch').oninput=()=>renderTables();
 
-// dialogs génériques
+/* Dialogs */
 const dlg=document.getElementById('dlg'), fields=document.getElementById('dlgFields'), title=document.getElementById('dlgTitle');
 let onOk=null;
 function openDlg(t, html, cb){ title.textContent=t; fields.innerHTML=html; onOk=cb; dlg.showModal(); }
