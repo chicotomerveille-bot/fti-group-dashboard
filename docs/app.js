@@ -17,6 +17,8 @@ async function load(){
     {nom:'LOCATION APPAREILS', client:'Divers', contrat:null, budget:null, statut:'Récurrent'},
   ];
   DB.projetsPerso = extra('projets');
+  const pd=document.getElementById('pageDate');
+  if(pd) pd.textContent='état au '+new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
   buildYears(); renderAll();
 }
 function yearOf(d){ if(!d) return 'Sans date'; const m=/^(\d{4})/.exec(d); return m?m[1]:'Sans date'; }

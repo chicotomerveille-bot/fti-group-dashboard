@@ -47,6 +47,7 @@
 
     <main id="main">
     <section id="tab-vue" class="tab active" role="tabpanel">
+      <div class="page-head"><h1>Vue d'ensemble</h1><p>État réel de l'entreprise · <span id="pageDate"></span> · FCFA</p></div>
       <div class="kpis">
         <div class="kpi"><div class="kpi-top"><span class="kpi-label">Trésorerie réelle</span><span class="pill neutral" id="kpiTrésoPill"></span></div><strong id="kpiTréso" class="mono">—</strong><div class="spark" id="sparkTrezo" aria-hidden="true"></div><span id="kpiTrésoSub" class="hint"></span></div>
         <div class="kpi"><div class="kpi-top"><span class="kpi-label">Total entrées</span><span class="pill up" id="kpiInPill"></span></div><strong id="kpiIn" class="mono">—</strong><div class="spark" id="sparkIn" aria-hidden="true"></div><span class="hint" id="kpiInSub"></span></div>
@@ -95,6 +96,7 @@
     </section>
 
     <section id="tab-projets" class="tab" role="tabpanel">
+      <div class="page-head"><h1>Projets</h1><p>Contrat, encaissé, dépensé et reste — par chantier</p></div>
       <div class="card">
         <div class="row-between"><div><h2>Chaque projet : contrat, encaissé, dépensé, reste</h2></div><button class="btn ghost" id="btnAddProjet">+ Nouveau projet</button></div>
         <div class="table-wrap"><table id="tblProjets"><thead><tr><th scope="col">Projet</th><th scope="col">Client</th><th scope="col">Contrat</th><th scope="col">Encaissé</th><th scope="col">Dépensé</th><th scope="col">Reste projet</th><th scope="col">Marge</th><th scope="col">Statut</th></tr></thead><tbody></tbody></table></div>
@@ -103,18 +105,22 @@
     </section>
 
     <section id="tab-produits" class="tab" role="tabpanel">
+      <div class="page-head"><h1>Produits</h1><p>Ce que vend FTI GROUP — levés, location GPS, forêt</p></div>
       <div class="card"><h2>Chaque produit : combien il rapporte</h2><div class="table-wrap"><table id="tblProduits"><thead><tr><th scope="col">Produit</th><th scope="col">Type</th><th scope="col">Nb ventes</th><th scope="col">Total entrées</th><th scope="col">Part</th></tr></thead><tbody></tbody></table></div></div>
     </section>
 
     <section id="tab-entrees" class="tab" role="tabpanel">
+      <div class="page-head"><h1>Entrées d'argent</h1><p>Chaque encaissement — client, projet, produit, compte</p></div>
       <div class="card"><h2>Chaque entrée d'argent</h2><div class="table-wrap"><table id="tblIn"><thead><tr><th scope="col">Date</th><th scope="col">Client</th><th scope="col">Projet</th><th scope="col">Produit</th><th scope="col">Description</th><th scope="col">Compte</th><th scope="col">Montant</th></tr></thead><tbody></tbody></table></div></div>
     </section>
 
     <section id="tab-depenses" class="tab" role="tabpanel">
+      <div class="page-head"><h1>Dépenses</h1><p>Chaque sortie — chantier comme Cour / Siège</p></div>
       <div class="card"><h2>Chaque dépense — y compris la Cour / Siège</h2><div class="table-wrap"><table id="tblOut"><thead><tr><th scope="col">Date</th><th scope="col">Projet</th><th scope="col">Catégorie</th><th scope="col">Description</th><th scope="col">Compte</th><th scope="col">Montant</th></tr></thead><tbody></tbody></table></div></div>
     </section>
 
     <section id="tab-prets" class="tab" role="tabpanel">
+      <div class="page-head"><h1>Prêts bancaires</h1><p>Montants, mensualités, échéancier et reste dû</p></div>
       <div class="grid2">
         <div class="card"><div class="row-between"><h2>Prêts bancaires</h2><button class="btn ghost" id="btnAddPret">+ Nouveau prêt</button></div><div id="pretsList"></div><p class="muted">Reste dû total : <strong class="mono" id="kpiPrets">—</strong> <span id="kpiPretsSub"></span></p></div>
         <div class="card"><h2>Échéancier — ce qu'il reste à payer</h2><div class="table-wrap"><table id="tblEch"><thead><tr><th scope="col">Prêt</th><th scope="col">Date</th><th scope="col">Mensualité</th><th scope="col">Payé ?</th></tr></thead><tbody></tbody></table></div></div>
