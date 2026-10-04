@@ -56,8 +56,8 @@ function cumul(values){ let s=0; return values.map(v=>s+=v); }
 /* Jauge semi-circulaire */
 function gaugeSVG(pct){
   const p=Math.max(0,Math.min(1,pct)), R=80, C=Math.PI*R, off=C*(1-p);
-  const col = p>=0.7 ? '#16A34A' : p>=0.4 ? '#1E6FF5' : '#F59E0B';
-  return `<svg viewBox="0 0 200 115"><path d="M20 105 A80 80 0 0 1 180 105" fill="none" stroke="#E2E8F0" stroke-width="16" stroke-linecap="round"/><path d="M20 105 A80 80 0 0 1 180 105" fill="none" stroke="${col}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/><text x="100" y="88" text-anchor="middle" font-size="26" font-weight="800" fill="#0F1F38">${(p*100).toFixed(1).replace('.',',')}%</text><text x="100" y="105" text-anchor="middle" font-size="10" fill="#64748B">des entrées</text></svg>`;
+  const col = p>=0.7 ? '#2E9E66' : p>=0.4 ? '#2F5CE6' : '#D8930D';
+  return `<svg viewBox="0 0 200 115"><path d="M20 105 A80 80 0 0 1 180 105" fill="none" stroke="#E7EBF2" stroke-width="16" stroke-linecap="round"/><path d="M20 105 A80 80 0 0 1 180 105" fill="none" stroke="${col}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/><text x="100" y="88" text-anchor="middle" font-size="26" font-weight="800" fill="#141C2E">${(p*100).toFixed(1).replace('.',',')}%</text><text x="100" y="105" text-anchor="middle" font-size="10" fill="#5C6B82">des entrées</text></svg>`;
 }
 
 let charts={};
@@ -85,17 +85,17 @@ function renderAll(){
   const msIn=monthSeries(t.rec), msOut=monthSeries(t.dep);
   const keys=[...new Set([...t.rec.map(r=>monthOf(r.date)),...t.dep.map(r=>monthOf(r.date))])].filter(Boolean).sort();
   const netByMonth=keys.map(k=> (t.rec.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0) - t.dep.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0)));
-  document.getElementById('sparkTrezo').innerHTML=sparkSVG(cumul(netByMonth),'#1E6FF5','#E8F0FE');
-  document.getElementById('sparkIn').innerHTML=sparkSVG(cumul(msIn),'#16A34A','#DCFCE7');
-  document.getElementById('sparkOut').innerHTML=sparkSVG(cumul(msOut),'#EF4444','#FEE2E2');
-  document.getElementById('sparkAsc').innerHTML=sparkSVG(cumul(monthSeries(DB.depenses.filter(d=>d.projet.includes('ASC')))),'#F59E0B','#FEF3C7');
+  document.getElementById('sparkTrezo').innerHTML=sparkSVG(cumul(netByMonth),'#2F5CE6','#EDF2FE');
+  document.getElementById('sparkIn').innerHTML=sparkSVG(cumul(msIn),'#2E9E66','#E5F5EC');
+  document.getElementById('sparkOut').innerHTML=sparkSVG(cumul(msOut),'#D9584C','#FBEDEB');
+  document.getElementById('sparkAsc').innerHTML=sparkSVG(cumul(monthSeries(DB.depenses.filter(d=>d.projet.includes('ASC')))),'#D8930D','#FCF3E0');
   document.getElementById('profitTotal').textContent=fmt(t.trezo);
 
   /* Barres de flux */
   const maxF=Math.max(t.tin,t.tou,budget-depAsc,1);
   const bar=(label,val,color)=>`<div class="flow-row"><span>${label}</span><span class="bar"><i style="width:${(val/maxF*100).toFixed(1)}%;background:${color}"></i></span><b>${fmt(val)}</b></div>`;
   document.getElementById('flowBars').innerHTML=
-    bar('Entrées',t.tin,'#16A34A')+bar('Dépenses',t.tou,'#EF4444')+bar('Reste ASC',budget-depAsc,'#1E6FF5');
+    bar('Entrées',t.tin,'#2E9E66')+bar('Dépenses',t.tou,'#D9584C')+bar('Reste ASC',budget-depAsc,'#2F5CE6');
 
   /* Jauge */
   document.getElementById('gauge').innerHTML=gaugeSVG(t.tin?inForet/t.tin:0);
@@ -126,21 +126,21 @@ function renderAll(){
 function renderCharts(t,keys){
   Object.values(charts).forEach(c=>c&&c.destroy()); charts={};
   if(typeof Chart==='undefined') return;
-  Chart.defaults.font.family='Inter,sans-serif';
+  Chart.defaults.font.family='Plus Jakarta Sans,sans-serif';
   Chart.defaults.font.size=11;
   const inM=keys.map(k=>t.rec.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0));
   const outM=keys.map(k=>t.dep.filter(r=>monthOf(r.date)===k).reduce((s,x)=>s+x.montant,0));
   let run=0;
   charts.profit=new Chart(document.getElementById('chProfit'),{type:'line',
     data:{labels:keys.map(k=>k||'—'),datasets:[
-      {label:'Entrées cumulées',data:cumul(inM),borderColor:'#16A34A',backgroundColor:'rgba(22,163,74,.12)',fill:true,tension:.4,pointRadius:3},
-      {label:'Dépenses cumulées',data:cumul(outM),borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,.10)',fill:true,tension:.4,pointRadius:3}]},
+      {label:'Entrées cumulées',data:cumul(inM),borderColor:'#2E9E66',backgroundColor:'rgba(46,158,102,.12)',fill:true,tension:.4,pointRadius:3},
+      {label:'Dépenses cumulées',data:cumul(outM),borderColor:'#D9584C',backgroundColor:'rgba(217,88,76,.10)',fill:true,tension:.4,pointRadius:3}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12,usePointStyle:true}}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
   void run;
   const cats={};
   t.dep.forEach(d=>{const desc=(d.description||'').toUpperCase(); const k=/RESTAURATION|HOTEL/.test(desc)?'Restauration & hôtel':/ECRAN|CHARGEUR|ONLY|RALONGE|BUREAUTIQUE/.test(desc)?'Matériel bureau':'Autres'; cats[k]=(cats[k]||0)+d.montant;});
   charts.cats=new Chart(document.getElementById('chCats'),{type:'bar',
-    data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#1E6FF5','#F59E0B','#7C3AED'],borderRadius:8,maxBarThickness:48}]},
+    data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#2F5CE6','#D8930D','#6E5BD0'],borderRadius:8,maxBarThickness:48}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
 }
 
