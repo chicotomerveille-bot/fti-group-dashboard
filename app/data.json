@@ -1,0 +1,288 @@
+{
+  "recettes": [
+    {
+      "date": null,
+      "client": null,
+      "categorie": "LOCATION APPAREILS",
+      "nature": "Prestations de services",
+      "description": "LOCATION GPS",
+      "montant": 24000,
+      "compte": "Espèces (caisse)"
+    },
+    {
+      "date": null,
+      "client": null,
+      "categorie": "PROJET FORET",
+      "nature": "Prestations de services",
+      "description": "TRAVAUX D'ECOLE NAWAL",
+      "montant": 200000,
+      "compte": "MOMOPAY business"
+    },
+    {
+      "date": null,
+      "client": "Mme Alice \nAHONOUKOUN",
+      "categorie": "LEVE",
+      "nature": "Prestations de services",
+      "description": "LEVE PARCELLE AGLA",
+      "montant": 50000,
+      "compte": "Espèces (caisse)"
+    },
+    {
+      "date": null,
+      "client": "DISTRICTECH",
+      "categorie": "PROJET FORET",
+      "nature": "Prestations de services",
+      "description": " FORET SACRE OUIDAH",
+      "montant": 1500000,
+      "compte": "Compte bancaire 1"
+    },
+    {
+      "date": null,
+      "client": "DAGBA",
+      "categorie": "LOCATION APPAREILS",
+      "nature": "Prestations de services",
+      "description": "LOCATION GPS",
+      "montant": 15000,
+      "compte": "MOMOPAY business"
+    },
+    {
+      "date": "2026-09-22T00:00:00",
+      "client": "DAGBA",
+      "categorie": "LOCATION APPAREILS",
+      "nature": "Prestations de services",
+      "description": "LOCATION GPS",
+      "montant": 15000,
+      "compte": "MOMOPAY business"
+    },
+    {
+      "date": "2026-09-24T00:00:00",
+      "client": "Awal ADIO",
+      "categorie": "LOCATION APPAREILS",
+      "nature": "Prestations de services",
+      "description": "LOCATION GPS",
+      "montant": 30000,
+      "compte": "MOMOPAY business"
+    },
+    {
+      "date": "2025-09-25T00:00:00",
+      "client": "Emmaus Galien",
+      "categorie": "LOCATION APPAREILS",
+      "nature": "Prestations de services",
+      "description": "LOCATION GPS",
+      "montant": 15400,
+      "compte": "MOMOPAY business"
+    },
+    {
+      "date": "2026-09-27T00:00:00",
+      "client": "Awal ADIO",
+      "categorie": "LOCATION APPAREILS",
+      "nature": "Prestations de services",
+      "description": "LOCATION GPS",
+      "montant": 10000,
+      "compte": "MOMOPAY business"
+    }
+  ],
+  "depenses": [
+    {
+      "date": null,
+      "categorie": "PROJET ASC",
+      "description": "ACHAT ECRAN BUREAUTIQUE",
+      "montant": 70000,
+      "compte": "Espèces (caisse)"
+    },
+    {
+      "date": null,
+      "categorie": "PROJET ASC",
+      "description": "ACHAT ON LY ONE BUREAUTIQUE",
+      "montant": 130000,
+      "compte": "HORS CAISSE"
+    },
+    {
+      "date": "2026-10-02T00:00:00",
+      "categorie": "PROJET ASC",
+      "description": "RESTATAURATION MIDI EQUIPE,\n MAITRE DOUVRAGE,et SBEE",
+      "montant": 25000,
+      "compte": "HORS CAISSE"
+    },
+    {
+      "date": "2026-10-02T00:00:00",
+      "categorie": "PROJET ASC",
+      "description": "RESTATAURATION SOIR ET HOTEL\n EQUIPE ET\n MAITRE DOUVRAGE",
+      "montant": 40000,
+      "compte": "HORS CAISSE"
+    },
+    {
+      "date": "2026-10-02T00:00:00",
+      "categorie": "PROJET ASC",
+      "description": "ACHAT 2 CHARGEUR \nET RALONGE",
+      "montant": 5000,
+      "compte": "HORS CAISSE"
+    }
+  ],
+  "budget_asc": {
+    "Linéaire contractuel / planifié": {
+      "valeur": 347.5,
+      "unite": "km"
+    },
+    "Linéaire actuellement représenté dans le KMZ": {
+      "valeur": 276.6061054876599,
+      "unite": "km"
+    },
+    "Écart non représenté dans le KMZ": {
+      "valeur": 70.89389451234007,
+      "unite": "km"
+    },
+    "Kilométrage mobilité avant marge": {
+      "valeur": 8438,
+      "unite": "km"
+    },
+    "Marge kilométrique": {
+      "valeur": 843.8000000000011,
+      "unite": "km"
+    },
+    "Kilométrage budgété": {
+      "valeur": 9281.800000000001,
+      "unite": "km"
+    },
+    "Carburant budgété": {
+      "valeur": 1044202.5,
+      "unite": "FCFA"
+    },
+    "Frais EM mobilité": {
+      "valeur": 928180.0000000001,
+      "unite": "FCFA"
+    },
+    "Budget opérationnel total": {
+      "valeur": 13104401.625,
+      "unite": "FCFA"
+    },
+    "Coût moyen / km de linéaire": {
+      "valeur": 37710.5082733813,
+      "unite": "FCFA/km"
+    },
+    "Montant du contrat": {
+      "valeur": 37000000,
+      "unite": "FCFA"
+    },
+    "Solde brut avant autres frais/impôts": {
+      "valeur": 23895598.375,
+      "unite": "FCFA"
+    }
+  },
+  "detail_couts": [
+    {
+      "poste": "GPS/RTK",
+      "qte": 88,
+      "unite": "GPS-jour",
+      "pu": 30000,
+      "total": 2640000,
+      "statut": "Hypothèse retenue"
+    },
+    {
+      "poste": "Opérateurs GPS",
+      "qte": 88,
+      "unite": "personne-jour",
+      "pu": 7000,
+      "total": 616000,
+      "statut": "Hypothèse retenue"
+    },
+    {
+      "poste": "Aides-opérateurs",
+      "qte": 88,
+      "unite": "personne-jour",
+      "pu": 6000,
+      "total": 528000,
+      "statut": "Hypothèse retenue"
+    },
+    {
+      "poste": "Manœuvres",
+      "qte": 176,
+      "unite": "personne-jour",
+      "pu": 5000,
+      "total": 880000,
+      "statut": "Hypothèse retenue"
+    },
+    {
+      "poste": "PDM terrain",
+      "qte": 352,
+      "unite": "personne-jour",
+      "pu": 1000,
+      "total": 352000,
+      "statut": "Hypothèse retenue"
+    },
+    {
+      "poste": "Superviseur terrain",
+      "qte": 22,
+      "unite": "jour",
+      "pu": 10000,
+      "total": 220000,
+      "statut": "Hypothèse retenue"
+    },
+    {
+      "poste": "Traitement – personnel",
+      "qte": 176,
+      "unite": "personne-jour",
+      "pu": 7000,
+      "total": 1232000,
+      "statut": "Hypothèse retenue"
+    },
+    {
+      "poste": "Superviseur traitement",
+      "qte": 44,
+      "unite": "jour",
+      "pu": 10000,
+      "total": 440000,
+      "statut": "Hypothèse retenue"
+    },
+    {
+      "poste": "PDM traitement",
+      "qte": 220,
+      "unite": "personne-jour",
+      "pu": 1000,
+      "total": 220000,
+      "statut": "Hypothèse retenue"
+    },
+    {
+      "poste": "Véhicules pick-up",
+      "qte": 88,
+      "unite": "véhicule-jour",
+      "pu": 35000,
+      "total": 3080000,
+      "statut": "Provisoire – à confirmer par devis"
+    },
+    {
+      "poste": "Hébergement phase 1",
+      "qte": 1,
+      "unite": "forfait",
+      "pu": 150000,
+      "total": 150000,
+      "statut": "Montant fourni"
+    },
+    {
+      "poste": "Carburant",
+      "qte": 9281.800000000001,
+      "unite": "km",
+      "pu": 112.5,
+      "total": 1044202.5,
+      "statut": "15 L/100 km × 750 FCFA/L"
+    },
+    {
+      "poste": "EM / mobilité",
+      "qte": 9281.800000000001,
+      "unite": "km",
+      "pu": 100,
+      "total": 928180.0000000001,
+      "statut": "100 FCFA/km"
+    },
+    {
+      "poste": "Réserve budgétaire",
+      "qte": 1,
+      "unite": "forfait",
+      "pu": 624019.125,
+      "total": 624019.125,
+      "statut": "5 %"
+    }
+  ],
+  "tot_recettes": 1859400,
+  "tot_depenses": 270000
+}
