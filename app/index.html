@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FTI GROUP — Tableau de bord réel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<a class="skip" href="#main">Aller au contenu</a>
 <div class="topo-bg" aria-hidden="true"></div>
 <header class="topbar">
   <div class="brand">
@@ -21,29 +22,29 @@
   </div>
   <div class="top-actions">
     <div class="year-switch" id="yearSwitch"></div>
-    <button id="btnAddDepense" class="btn ghost">+ Dépense</button>
-    <button id="btnAddRecette" class="btn primary">+ Entrée d'argent</button>
+    <button id="btnAddDepense" class="btn ghost" aria-label="Ajouter une dépense"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>Dépense</button>
+    <button id="btnAddRecette" class="btn primary" aria-label="Ajouter une entrée d'argent"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>Entrée d'argent</button>
   </div>
 </header>
 
-<nav class="tabs" id="tabs">
-  <button data-tab="vue" class="active">Vue d'ensemble</button>
-  <button data-tab="projets">Projets</button>
-  <button data-tab="produits">Produits</button>
-  <button data-tab="entrees">Entrées</button>
-  <button data-tab="depenses">Dépenses</button>
-  <button data-tab="prets">Prêts bancaires</button>
+<nav class="tabs" id="tabs" role="tablist" aria-label="Sections du tableau de bord">
+  <button data-tab="vue" class="active" role="tab" aria-selected="true">Vue d'ensemble</button>
+  <button data-tab="projets" role="tab" aria-selected="false">Projets</button>
+  <button data-tab="produits" role="tab" aria-selected="false">Produits</button>
+  <button data-tab="entrees" role="tab" aria-selected="false">Entrées</button>
+  <button data-tab="depenses" role="tab" aria-selected="false">Dépenses</button>
+  <button data-tab="prets" role="tab" aria-selected="false">Prêts bancaires</button>
 </nav>
 
-<main>
+<main id="main">
 <!-- VUE -->
 <section id="tab-vue" class="tab active">
   <div class="kpis">
-    <div class="kpi"><label>Trésorerie réelle</label><strong id="kpiTréso" class="mono">—</strong><span id="kpiTrésoSub" class="hint"></span></div>
-    <div class="kpi"><label>Total entrées</label><strong id="kpiIn" class="mono green">—</strong><span class="hint" id="kpiInSub"></span></div>
-    <div class="kpi"><label>Total dépenses</label><strong id="kpiOut" class="mono red">—</strong><span class="hint" id="kpiOutSub"></span></div>
-    <div class="kpi accent"><label>Contrat ASC Lot 2</label><strong class="mono">37 000 000</strong><span class="hint">Budget op. 13 104 402 · <b id="kpiAscReste"></b> restants</span></div>
-    <div class="kpi dark"><label>Prêts — reste dû</label><strong id="kpiPrets" class="mono">—</strong><span class="hint" id="kpiPretsSub"></span></div>
+    <div class="kpi"><span class="kpi-label">Trésorerie réelle</span><strong id="kpiTréso" class="mono">—</strong><span id="kpiTrésoSub" class="hint"></span><div class="bullet" id="bulTrezo" aria-hidden="true"></div><div class="bullet-cap"><span>Dépenses</span><span>Entrées (cible)</span></div></div>
+    <div class="kpi"><span class="kpi-label">Total entrées</span><strong id="kpiIn" class="mono green">—</strong><span class="hint" id="kpiInSub"></span></div>
+    <div class="kpi"><span class="kpi-label">Total dépenses</span><strong id="kpiOut" class="mono red">—</strong><span class="hint" id="kpiOutSub"></span><div class="bullet" id="bulDep" aria-hidden="true"></div><div class="bullet-cap"><span>0</span><span>100 % des entrées</span></div></div>
+    <div class="kpi accent"><span class="kpi-label">Contrat ASC Lot 2</span><strong class="mono">37 000 000</strong><span class="hint">Budget op. 13 104 402 · <b id="kpiAscReste"></b> restants</span><div class="bullet" id="bulAsc" aria-hidden="true"></div><div class="bullet-cap"><span>Consommé</span><span>Budget (cible)</span></div></div>
+    <div class="kpi dark"><span class="kpi-label">Prêts — reste dû</span><strong id="kpiPrets" class="mono">—</strong><span class="hint" id="kpiPretsSub"></span><div class="bullet" id="bulPret" aria-hidden="true"></div><div class="bullet-cap"><span>Remboursé</span><span>Total dû</span></div></div>
   </div>
 
   <div class="grid2">
@@ -71,7 +72,7 @@
   </div>
 
   <div class="card alert">
-    <h2>⚠ Points de vigilance — lus depuis tes fichiers</h2>
+    <h2><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3 2.5 17h15L10 3Z" stroke-linejoin="round"/><path d="M10 8v4" stroke-linecap="round"/><circle cx="10" cy="14.6" r=".4" fill="currentColor"/></svg>Points de vigilance — lus depuis tes fichiers</h2>
     <ul id="alerts"></ul>
   </div>
 </section>
@@ -80,32 +81,32 @@
 <section id="tab-projets" class="tab">
   <div class="card">
     <div class="row-between"><h2>Chaque projet : contrat, encaissé, dépensé, reste</h2><button class="btn ghost" id="btnAddProjet">+ Nouveau projet</button></div>
-    <div class="table-wrap"><table id="tblProjets"><thead><tr><th>Projet</th><th>Client</th><th>Contrat</th><th>Encaissé</th><th>Dépensé</th><th>Reste projet</th><th>Marge</th><th>Statut</th></tr></thead><tbody></tbody></table></div>
+    <div class="table-wrap"><table id="tblProjets"><thead><tr><th scope="col">Projet</th><th scope="col">Client</th><th scope="col">Contrat</th><th scope="col">Encaissé</th><th scope="col">Dépensé</th><th scope="col">Reste projet</th><th scope="col">Marge</th><th scope="col">Statut</th></tr></thead><tbody></tbody></table></div>
     <p class="muted">Nouveau projet = il apparaît ici avec 0 dépensé, puis chaque dépense/recette saisie avec son projet met à jour le reste automatiquement.</p>
   </div>
-  <div class="card"><h2>Détail budget ASC Lot 2 — 347,5 km</h2><div class="table-wrap"><table id="tblBudget"><thead><tr><th>Poste</th><th>Qté</th><th>PU</th><th>Total</th><th>Statut</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h2>Détail budget ASC Lot 2 — 347,5 km</h2><div class="table-wrap"><table id="tblBudget"><thead><tr><th scope="col">Poste</th><th scope="col">Qté</th><th scope="col">PU</th><th scope="col">Total</th><th scope="col">Statut</th></tr></thead><tbody></tbody></table></div></div>
 </section>
 
 <!-- PRODUITS -->
 <section id="tab-produits" class="tab">
-  <div class="card"><h2>Chaque produit : combien il rapporte</h2><div class="table-wrap"><table id="tblProduits"><thead><tr><th>Produit</th><th>Type</th><th>Nb ventes</th><th>Total entrées</th><th>Part</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h2>Chaque produit : combien il rapporte</h2><div class="table-wrap"><table id="tblProduits"><thead><tr><th scope="col">Produit</th><th scope="col">Type</th><th scope="col">Nb ventes</th><th scope="col">Total entrées</th><th scope="col">Part</th></tr></thead><tbody></tbody></table></div></div>
 </section>
 
 <!-- ENTREES -->
 <section id="tab-entrees" class="tab">
-  <div class="card"><h2>Chaque entrée d'argent</h2><input id="searchIn" class="search" placeholder="Rechercher client, description, produit…"><div class="table-wrap"><table id="tblIn"><thead><tr><th>Date</th><th>Client</th><th>Projet</th><th>Produit</th><th>Description</th><th>Compte</th><th>Montant</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h2>Chaque entrée d'argent</h2><label class="muted" for="searchIn">Filtrer les entrées</label><input id="searchIn" class="search" placeholder="Rechercher client, description, produit…" aria-label="Rechercher dans les entrées"><div class="table-wrap"><table id="tblIn"><thead><tr><th scope="col">Date</th><th scope="col">Client</th><th scope="col">Projet</th><th scope="col">Produit</th><th scope="col">Description</th><th scope="col">Compte</th><th scope="col">Montant</th></tr></thead><tbody></tbody></table></div></div>
 </section>
 
 <!-- DEPENSES -->
 <section id="tab-depenses" class="tab">
-  <div class="card"><h2>Chaque dépense — y compris la Cour / Siège</h2><input id="searchOut" class="search" placeholder="Rechercher description, catégorie…"><div class="table-wrap"><table id="tblOut"><thead><tr><th>Date</th><th>Projet</th><th>Catégorie</th><th>Description</th><th>Compte</th><th>Montant</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h2>Chaque dépense — y compris la Cour / Siège</h2><label class="muted" for="searchOut">Filtrer les dépenses</label><input id="searchOut" class="search" placeholder="Rechercher description, catégorie…" aria-label="Rechercher dans les dépenses"><div class="table-wrap"><table id="tblOut"><thead><tr><th scope="col">Date</th><th scope="col">Projet</th><th scope="col">Catégorie</th><th scope="col">Description</th><th scope="col">Compte</th><th scope="col">Montant</th></tr></thead><tbody></tbody></table></div></div>
 </section>
 
 <!-- PRETS -->
 <section id="tab-prets" class="tab">
   <div class="grid2">
     <div class="card"><div class="row-between"><h2>Prêts bancaires</h2><button class="btn ghost" id="btnAddPret">+ Nouveau prêt</button></div><div id="pretsList"></div></div>
-    <div class="card"><h2>Échéancier — ce qu'il reste à payer</h2><div class="table-wrap"><table id="tblEch"><thead><tr><th>Prêt</th><th>Date</th><th>Mensualité</th><th>Payé ?</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="card"><h2>Échéancier — ce qu'il reste à payer</h2><div class="table-wrap"><table id="tblEch"><thead><tr><th scope="col">Prêt</th><th scope="col">Date</th><th scope="col">Mensualité</th><th scope="col">Payé ?</th></tr></thead><tbody></tbody></table></div></div>
   </div>
 </section>
 </main>

@@ -37,6 +37,10 @@ function totals(){
   return {tin,tou,trezo:tin-tou,rec,dep,restePrets};
 }
 
+function bullet(pct){
+  const p=Math.max(0,Math.min(1,pct));
+  return `<span class="q1"></span><span class="q2"></span><span class="q3"></span><span class="perf" style="width:calc(${(p*100).toFixed(1)}% - 2px)"></span><span class="target" style="left:100%"></span>`;
+}
 function ringSVG(pct,color,label,val,sub){
   const c=2*Math.PI*44, off=c*(1-Math.min(1,pct));
   return `<div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="#14201A18" stroke-width="12"/><circle cx="50" cy="50" r="44" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 50 50)"/><text x="50" y="56" text-anchor="middle" font-size="16" font-weight="800" fill="#14201A">${Math.round(pct*100)}%</text></svg><b>${label}</b><span>${val}</span><br><span>${sub}</span></div>`;
@@ -58,10 +62,15 @@ function renderAll(){
   document.getElementById('kpiPretsSub').textContent= DB.prets.length? `${DB.prets.length} prêt(s) · ${DB.echeances.filter(e=>!e.paye).length} échéances restantes` : 'Aucun prêt saisi — ajoute le 1er';
 
   document.getElementById('rings').innerHTML =
-    ringSVG(depAsc/budget,'#D64545','Budget ASC consommé',fmt(depAsc),`reste ${fmt(budget-depAsc)}`) +
-    ringSVG(t.tou/Math.max(1,t.tin),'#1E7A4C','Dépenses / Entrées',fmt(t.tou),`${fmt(t.tin)} encaissés`) +
-    ringSVG(t.rec.filter(r=>r.projet==='PROJET FORET').reduce((s,x)=>s+x.montant,0)/Math.max(1,t.tin),'#2B7FFF','Part FORET',fmt(t.rec.filter(r=>r.projet==='PROJET FORET').reduce((s,x)=>s+x.montant,0)),'sur total entrées') +
-    ringSVG(DB.prets.length? (DB.echeances.filter(e=>e.paye).reduce((s,e)=>s+e.montant,0)/Math.max(1,DB.echeances.reduce((s,e)=>s+e.montant,0))):0,'#F2B705','Prêts remboursés',fmt(DB.echeances.filter(e=>e.paye).reduce((s,e)=>s+e.montant,0)), DB.prets.length?'sur total dû':'aucun prêt');
+    ringSVG(depAsc/budget,'#DC2626','Budget ASC consommé',fmt(depAsc),`reste ${fmt(budget-depAsc)}`) +
+    ringSVG(t.tou/Math.max(1,t.tin),'#059669','Dépenses / Entrées',fmt(t.tou),`${fmt(t.tin)} encaissés`) +
+    ringSVG(t.rec.filter(r=>r.projet==='PROJET FORET').reduce((s,x)=>s+x.montant,0)/Math.max(1,t.tin),'#3B82F6','Part FORET',fmt(t.rec.filter(r=>r.projet==='PROJET FORET').reduce((s,x)=>s+x.montant,0)),'sur total entrées') +
+    ringSVG(DB.prets.length? (DB.echeances.filter(e=>e.paye).reduce((s,e)=>s+e.montant,0)/Math.max(1,DB.echeances.reduce((s,e)=>s+e.montant,0))):0,'#1E40AF','Prêts remboursés',fmt(DB.echeances.filter(e=>e.paye).reduce((s,e)=>s+e.montant,0)), DB.prets.length?'sur total dû':'aucun prêt');
+  const totEch=DB.echeances.reduce((s,e)=>s+e.montant,0), payeEch=DB.echeances.filter(e=>e.paye).reduce((s,e)=>s+e.montant,0);
+  document.getElementById('bulTrezo').innerHTML=bullet(t.tou/Math.max(1,t.tin));
+  document.getElementById('bulDep').innerHTML=bullet(t.tou/Math.max(1,t.tin));
+  document.getElementById('bulAsc').innerHTML=bullet(depAsc/budget);
+  document.getElementById('bulPret').innerHTML=bullet(totEch?payeEch/totEch:0);
 
   document.getElementById('alerts').innerHTML = [
     `<li><b>Devise CHF dans l'Excel</b> → appli forcée en FCFA. TVA à 0, à paramétrer au Bénin.</li>`,
@@ -82,12 +91,12 @@ function renderCharts(){
   const projs=[...new Set([...DB.recettes.map(r=>r.projet),...DB.depenses.map(d=>d.projet)])];
   const rin=projs.map(p=>filtered(DB.recettes).filter(r=>r.projet===p).reduce((s,x)=>s+x.montant,0));
   const rou=projs.map(p=>filtered(DB.depenses).filter(d=>d.projet===p).reduce((s,x)=>s+x.montant,0));
-  charts.p= new Chart(document.getElementById('chProjets'),{type:'bar',data:{labels:projs,datasets:[{label:'Entrées',data:rin,backgroundColor:'#1E7A4C'},{label:'Dépenses',data:rou,backgroundColor:'#D64545'}]},options:{plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
+  charts.p= new Chart(document.getElementById('chProjets'),{type:'bar',data:{labels:projs,datasets:[{label:'Entrées',data:rin,backgroundColor:'#059669'},{label:'Dépenses',data:rou,backgroundColor:'#DC2626'}]},options:{plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
   document.getElementById('projLegend').textContent = projs.map((p,i)=>`${p}: +${fmtN(rin[i])} / -${fmtN(rou[i])}`).join(' · ');
   const years=[...new Set([...DB.recettes.map(r=>r.annee),...DB.depenses.map(d=>d.annee)])].sort();
-  charts.a=new Chart(document.getElementById('chAnnees'),{type:'bar',data:{labels:years,datasets:[{label:'Entrées',data:years.map(y=>DB.recettes.filter(r=>String(r.annee)===String(y)).reduce((s,x)=>s+x.montant,0)),backgroundColor:'#2B7FFF'},{label:'Dépenses',data:years.map(y=>DB.depenses.filter(r=>String(r.annee)===String(y)).reduce((s,x)=>s+x.montant,0)),backgroundColor:'#F2B705'}]},options:{plugins:{legend:{position:'bottom'}}}});
+  charts.a=new Chart(document.getElementById('chAnnees'),{type:'bar',data:{labels:years,datasets:[{label:'Entrées',data:years.map(y=>DB.recettes.filter(r=>String(r.annee)===String(y)).reduce((s,x)=>s+x.montant,0)),backgroundColor:'#3B82F6'},{label:'Dépenses',data:years.map(y=>DB.depenses.filter(r=>String(r.annee)===String(y)).reduce((s,x)=>s+x.montant,0)),backgroundColor:'#1E40AF'}]},options:{plugins:{legend:{position:'bottom'}}}});
   const g=groupBy(filtered(DB.recettes),'produit'); 
-  charts.pr=new Chart(document.getElementById('chProduits'),{type:'doughnut',data:{labels:Object.keys(g),datasets:[{data:Object.values(g),backgroundColor:['#1E7A4C','#2B7FFF','#F2B705','#D64545','#7A5CFF','#00B8A9']}]},options:{plugins:{legend:{position:'bottom'}}}});
+  charts.pr=new Chart(document.getElementById('chProduits'),{type:'doughnut',data:{labels:Object.keys(g),datasets:[{data:Object.values(g),backgroundColor:['#059669','#3B82F6','#1E40AF','#DC2626','#7A5CFF','#00B8A9']}]},options:{plugins:{legend:{position:'bottom'}}}});
 }
 
 function renderTables(){
@@ -132,7 +141,7 @@ function buildYears(){
 }
 
 // tabs
-document.getElementById('tabs').onclick=e=>{ if(e.target.dataset.tab){ document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); document.querySelectorAll('main .tab').forEach(s=>s.classList.remove('active')); document.getElementById('tab-'+e.target.dataset.tab).classList.add('active'); }};
+document.getElementById('tabs').onclick=e=>{ const btn=e.target.closest('button'); if(btn&&btn.dataset.tab){ document.querySelectorAll('.tabs button').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');}); btn.classList.add('active'); btn.setAttribute('aria-selected','true'); document.querySelectorAll('main .tab').forEach(s=>s.classList.remove('active')); document.getElementById('tab-'+btn.dataset.tab).classList.add('active'); }};
 document.getElementById('searchIn').oninput=renderTables; document.getElementById('searchOut').oninput=renderTables;
 
 // dialogs génériques
@@ -160,3 +169,4 @@ document.getElementById('btnAddPret').onclick=()=>openDlg('Nouveau prêt bancair
 });
 
 load();
+if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.body.classList.add('anim');}
