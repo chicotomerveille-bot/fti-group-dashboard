@@ -132,7 +132,7 @@ function renderAll(){
   renderTables(t); renderCharts(t,keys); renderPrets();
 }
 
-function escapeHtml(s){ return String(s||'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"'); }
+function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function renderCharts(t,keys){
   Object.values(charts).forEach(c=>c&&c.destroy()); charts={};
@@ -164,8 +164,10 @@ function renderTables(t){
       : p.nom==='LOCATION APPAREILS'? DB.recettes.filter(r=>r.projet==='LOCATION APPAREILS').reduce((s,x)=>s+Number(x.montant||0),0)
       : DB.recettes.filter(r=>r.projet===p.nom||(p.nom.includes('ASC')&&(r.projet||'').includes('ASC'))).reduce((s,x)=>s+Number(x.montant||0),0);
     const eout=DB.depenses.filter(d=>d.projet===p.nom||(p.nom.includes('ASC')&&(d.projet||'').includes('ASC'))).reduce((s,x)=>s+Number(x.montant||0),0);
-    const ref = p.contrat ?? ein2;
-    const reste = (ref||0) - eout;
+    // Reste à encaisser = contrat − encaissé. Avant : contrat − dépensé,
+    // ce qui affichait tout le contrat en « reste » même sans rien encaisser.
+    // Sans contrat : solde (encaissé − dépensé).
+    const reste = p.contrat ? Math.max(0, p.contrat - ein2) : ein2 - eout;
     const marge = p.contrat? ((p.contrat-(p.budget||eout))/p.contrat*100): null;
     const delBtn = isPerso ? `<button class="btn-icon danger" data-del-projet="${pi - DB.projetsBase.length}" title="Supprimer ce projet" aria-label="Supprimer">×</button>` : '';
     tb.innerHTML+=`<tr><td><b>${escapeHtml(p.nom)}</b><br><span class="muted">${escapeHtml(p.client||'')}</span></td><td>${escapeHtml(p.client||'—')}</td><td class="mono">${p.contrat?fmt(p.contrat):'—'}</td><td class="mono" style="color:var(--accent)">${fmt(ein2)}</td><td class="mono" style="color:var(--danger)">${fmt(eout)}</td><td class="mono"><b>${fmt(reste)}</b></td><td>${marge===null?'—':marge.toFixed(1).replace('.',',')+'%'}</td><td>${escapeHtml(p.statut||'')} ${delBtn}</td></tr>`;
@@ -264,7 +266,10 @@ document.getElementById('btnExportOut')?.addEventListener('click', ()=>{
 const dlg=document.getElementById('dlg'), fields=document.getElementById('dlgFields'), title=document.getElementById('dlgTitle');
 let onOk=null;
 function openDlg(t, html, cb){ title.textContent=t; fields.innerHTML=html; onOk=cb; dlg.showModal(); }
-document.getElementById('dlgOk').onclick=()=>{ if(onOk) onOk(); };
+// method="dialog" ferme la fenêtre même quand la validation échoue :
+// on annule la fermeture si le callback retourne false (saisie conservée,
+// l'utilisateur corrige et reclique Enregistrer).
+document.getElementById('dlgForm').addEventListener('submit', (e)=>{ if(e.submitter && e.submitter.value!=='ok'){ onOk=null; return; } if(!onOk) return; const r=onOk(); if(r===false){ e.preventDefault(); } else { onOk=null; } });
 const inp=(id,label,val='',type='text')=>`<label>${label}<input id="${id}" type="${type}" value="${val}" ${type==='number'?'min="0" step="1"':''}></label>`;
 const sel=(id,label,options,val='')=>`<label>${label}<select id="${id}">${options.map(o=>`<option value="${o}" ${o===val?'selected':''}>${o}</option>`).join('')}</select></label>`;
 const COMPTES = ['Espèces (caisse)','Compte bancaire 1','MOMOPAY business','HORS CAISSE'];
@@ -280,8 +285,8 @@ document.getElementById('btnAddRecette').onclick=()=>openDlg('Nouvelle entrée d
   ()=>{
     const g=id=>document.getElementById(id).value;
     const montant = +g('f-montant');
-    if(!montant || montant<=0){ alert('Le montant doit être supérieur à 0.'); return; }
-    if(!g('f-date')){ alert('La date est obligatoire.'); return; }
+    if(!montant || montant<=0){ alert('Le montant doit être supérieur à 0.'); return false; }
+    if(!g('f-date')){ alert('La date est obligatoire.'); return false; }
     const r={date:g('f-date'),client:g('f-client'),projet:g('f-projet')||'Sans projet',produit:g('f-produit')||g('f-desc')||'Produit',description:g('f-desc'),montant,compte:g('f-compte')||'Espèces (caisse)',annee:yearOf(g('f-date')),categorie:''};
     const arr=JSON.parse(localStorage.getItem('fti_recettes')||'[]'); arr.push(r); save('recettes',arr);
     refreshFromStorage(); buildYears(); renderAll();
@@ -298,8 +303,8 @@ document.getElementById('btnAddDepense').onclick=()=>openDlg('Nouvelle dépense'
   ()=>{
     const g=id=>document.getElementById(id).value;
     const montant = +g('f-montant');
-    if(!montant || montant<=0){ alert('Le montant doit être supérieur à 0.'); return; }
-    if(!g('f-date')){ alert('La date est obligatoire.'); return; }
+    if(!montant || montant<=0){ alert('Le montant doit être supérieur à 0.'); return false; }
+    if(!g('f-date')){ alert('La date est obligatoire.'); return false; }
     const d={date:g('f-date'),projet:g('f-projet')||'COUR / SIEGE',categorie:g('f-cat'),description:g('f-desc'),montant,compte:g('f-compte')||'Espèces (caisse)',annee:yearOf(g('f-date'))};
     const arr=JSON.parse(localStorage.getItem('fti_depenses')||'[]'); arr.push(d); save('depenses',arr);
     refreshFromStorage(); buildYears(); renderAll();
@@ -310,7 +315,7 @@ document.getElementById('btnAddProjet').onclick=()=>openDlg('Nouveau projet',
   inp('f-nom','Nom projet')+inp('f-client','Client')+inp('f-contrat','Montant contrat FCFA','', 'number'),
   ()=>{
     const g=id=>document.getElementById(id).value;
-    if(!g('f-nom').trim()){ alert('Le nom du projet est obligatoire.'); return; }
+    if(!g('f-nom').trim()){ alert('Le nom du projet est obligatoire.'); return false; }
     const arr=JSON.parse(localStorage.getItem('fti_projets')||'[]');
     arr.push({nom:g('f-nom').trim(),client:g('f-client'),contrat:+g('f-contrat')||null,budget:null,statut:'Nouveau',_perso:true});
     save('projets',arr); refreshFromStorage(); renderAll();
@@ -327,8 +332,8 @@ document.getElementById('btnAddPret').onclick=()=>openDlg('Nouveau prêt bancair
   ()=>{
     const g=id=>document.getElementById(id).value;
     const montant=+g('f-montant'), mens=+g('f-mens'), nb=+g('f-nb');
-    if(!g('f-nom').trim()){ alert('Le nom du prêt est obligatoire.'); return; }
-    if(!montant||montant<=0||!mens||mens<=0||!nb||nb<=0){ alert('Montant, mensualité et nombre de mois doivent être > 0.'); return; }
+    if(!g('f-nom').trim()){ alert('Le nom du prêt est obligatoire.'); return false; }
+    if(!montant||montant<=0||!mens||mens<=0||!nb||nb<=0){ alert('Montant, mensualité et nombre de mois doivent être > 0.'); return false; }
     const pa=JSON.parse(localStorage.getItem('fti_prets')||'[]');
     const ea=JSON.parse(localStorage.getItem('fti_echeances')||'[]');
     pa.push({nom:g('f-nom').trim(),banque:g('f-banque'),montant,mensualite:mens});
